@@ -1,0 +1,5 @@
+DAV-S888 from brand SONY.
+It use as driver to VFD the IC M9202-05 of OKI
+
+* Arduino: https://github.com/emsyscode/M9202/
+* YouTube: https://www.youtube.com/watch?v=WrXTP29_QF8
