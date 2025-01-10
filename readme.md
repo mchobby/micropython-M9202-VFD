@@ -92,7 +92,113 @@ The remaining of symbols are controled with ADRAM (special RAM that add 2 bits f
 As this project focus on the reuse of the complete panel I did also worked oo interfacing with the LEDs and buttons.
 
 * LEDs are controled via the __M66310FP__ 16 bit GPIO Expander + LED controler
-* Buttons are read through __ANALOG signals__. Several buttons share a common "key" pin with different pull-down resistor for each of the buttons. That result in a different analog voltage on the "key" pin depending on the pressed button.
+* Buttons are read through __ANALOG signals__. Several buttons share a common "key" pin with different pull-up resistor (to 5V) on each of the buttons. That result in a different analog voltage on the "key" pin depending on the pressed button.
 * A distinct 5V & GND power circuit is available for the analog operations.
 
 ![Keyboard & LED interface](docs/_static/KEYB-pcb-pinout.png)
+
+### The LEDs
+
+The LEDs are controled with the M66310, a 16 bits GPIO Expander and LED driver (see libraries).
+
+The GPIO expander uses a serial interface where the 16 bits is pushed one by one in a shift register. The serial interface (DataIn, Shift Clock, Reset) is shared with the VFD controler. The Latch Clk is used to send the shift register data to the GPIO Expander output.  Notice that /OE is keept LOW to keeps LEDs actives.
+
+The picture here below indicates the name of the LEDs wired to the GPIO Expander. Names starting with "con2." are LEDs localised on the daugther board.
+
+![LEDs wired on the MD66310 GPIO expander](docs/_static/M66310FP.png)
+
+Here follow the correspondance between the bits and the LEDs. N.C. means Not Connected.
+
+| MF66310 Bit# | Attached LED |
+| -------- | ------- |
+| 0 | N.C. |
+| 1 | N.C. |
+| 2 | Group 1 |
+| 3 | Group 2 |
+| 4 | Group 3 |
+| 5 | Group 4 |
+| 6 | Group 5 |
+| 7 | Group 6 |
+| 8 | Group 7 |
+| 9 | Group 9 |
+| 10 | Hit List |
+| 11 | Pause |
+| 12 | Play |
+| 13 | Mega |
+| 14 | Plus |
+| 15 | N.C. |
+
+### StandBy LED
+The StandBy LED above the On/Off button is controled directly by the main board connector (CON1)
+
+### The buttons 
+
+The buttons are grouped in several analog circuits labelled Key0, Key1, Key2, Key3, Key4 (all reported on the main connector).
+
+![Principle of analog key reading](docs/_static/buttons-wiring.png)
+
+The microcontroler side must add the remaining divider bridge to read the ADC voltage. After several tests a **8.2KΩ** pull-down resistor provides the better voltage outputs.
+
+__Rotary Encoder Remark:__
+
+rotaty encoder do creates square signal transition on two distinct pins (so two "key" output). The pin on wich the transition appears first indicates the rotation direction (clockwise or anti-clockwise)
+
+| KEY 0 output | Voltage (V) |
+| -------- | ------- |
+| no action| 0.00 |
+| Timer Play | 2.20 |
+| On/Off | 1.24 |
+| Group 1 | 1.62 |
+| Group 5 | 1.89 |
+| Group 6 | 2.20 |
+| Group 7 | 2.49 |
+| Group 8 | 2.73 |
+| Group File | 2.90 |
+
+| KEY 1 output | Voltage (V) |
+| -------- | ------- |
+| no action | 0.00 |
+| Disc encoder | 0.00 → 1.26 → 0.00 |
+| Repeat | 1.23 |
+| Program | 1.61 |
+| Shuffle | 1.89 |
+| Continue | 2.20 |
+| Group 4 | 2.49 |
+| Group 3 | 2.73 |
+| Group 2 | 2.89 |
+
+| KEY 2 output | Voltage (V) |
+| -------- | ------- |
+| no action | 0.81 |
+| Disc encoder | 0.81 → 0.00 → 0.81 |
+| PRESS AMS encoder | 1.26 |
+| PRESS Disc encoder | 1.67 |
+| Menu/No | 1.97 |
+| +100 | 2.32 |
+| Yes  | 2.66 |
+
+| KEY 3 output | Voltage (V) |
+| -------- | ------- |
+| no action | 0.00 |
+| AMS encoder | 0.00 → 1.23 → 0.00 |
+| X-Fade| 1.26 |
+| No delay | 2.20 |
+| Fader | 2.73 |
+
+| KEY 4 output | Voltage (V) |
+| -------- | ------- |
+| no action | 1.22 |
+| AMS encoder | 1.22 → 0.00 → 1.22 |
+| Open/Close | 1.62 |
+| Play | 1.89 |
+| Pause | 2.19 |
+| Stop | 2.49 |
+| Mega Control | 2.73 |
+| Easy Play | 2.90 |
+
+ 
+
+# Libraries
+
+* `vfd_pt63.py` : the main VFD display library must be [downloaded from the micropython-PT6302-VFD github](https://github.com/mchobby/micropython-PT6302-VFD) - The Princeton PT6302 VFD driver also works for the OKI M9202.
+* `m66310.py`: is a driver to control the Mitsubishi M66310 16 bits GPIO exmpander (see [M66310 datasheet](docs/M66310P.pdf) for more details)
